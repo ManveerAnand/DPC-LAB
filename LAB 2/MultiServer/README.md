@@ -75,3 +75,31 @@ This allows us to run the **exact same code** multiple times, just behaving slig
 2.  LB creates a specialized socket for Backend 1 (5001).
 3.  LB glues the two sockets together.
 4.  Client thinks it's talking to LB, but LB is just mouthing the words from Backend 1.
+
+---
+
+## How to Run (Requires 4 Terminals)
+
+**Terminal 1 - Start Backend Server 1:**
+```bash
+python "LAB 2/MultiServer/backend.py" 5001 1
+```
+
+**Terminal 2 - Start Backend Server 2:**
+```bash
+python "LAB 2/MultiServer/backend.py" 5002 2
+```
+
+**Terminal 3 - Start Load Balancer:**
+```bash
+python "LAB 2/MultiServer/load_balancer.py"
+```
+The Load Balancer listens on Port 5000 and forwards traffic to backends.
+
+**Terminal 4 - Run Client:**
+```bash
+python "LAB 2/MultiServer/client.py"
+```
+Type messages. Notice the response will show `[Server 1]` or `[Server 2]`.
+
+**To Test Round Robin:** Open Terminal 5 and run another client. Observe how requests alternate between Server 1 and Server 2.

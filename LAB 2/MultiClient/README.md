@@ -60,3 +60,33 @@ Each thread acts like a unique user.
 They all hit the "Connect" button at the same millisecond.
 *   **Without Threading on the Server:** The 20th client would wait a long time.
 *   **With Threading:** All 20 get an immediate "Hello" from a dedicated server thread.
+
+---
+
+## How to Run
+
+### Option 1: Interactive Client
+
+**Terminal 1 - Start Server:**
+```bash
+python "LAB 2/MultiClient/server.py"
+```
+
+**Terminal 2 - Run Client:**
+```bash
+python "LAB 2/MultiClient/client.py"
+```
+Type messages and press Enter. Open multiple terminals to run multiple clients simultaneously.
+
+### Option 2: Stress Test (20 Clients Automatically)
+
+**Terminal 1 - Start Server:**
+```bash
+python "LAB 2/MultiClient/server.py"
+```
+
+**Terminal 2 - Run Stress Test:**
+```bash
+python "LAB 2/MultiClient/stress_client.py"
+```
+Watch as 20 simultaneous clients connect and get responses.

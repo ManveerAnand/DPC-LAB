@@ -72,3 +72,32 @@ server.register_function(check, "check")
 
 **Why XML?**
 It's an old standard. The data is wrapped in XML tags (e.g., `<param><value><int>123</int></value></param>`) so that any language (Java, C++, Python) can understand the request.
+
+---
+
+## How to Run
+
+### Basic Client-Server (Folder: `CLIENT_SERVER/`)
+
+**Terminal 1 - Start Server:**
+```bash
+python "LAB 1/CLIENT_SERVER/server.py"
+```
+
+**Terminal 2 - Run Client:**
+```bash
+python "LAB 1/CLIENT_SERVER/client.py"
+```
+
+### RPC (Folder: `RPC/`)
+
+**Terminal 1 - Start RPC Server:**
+```bash
+python "LAB 1/RPC/rpc_server.py"
+```
+
+**Terminal 2 - Run RPC Client:**
+```bash
+python "LAB 1/RPC/rpc_client.py"
+```
+The client will prompt you to choose between checking for palindrome or Armstrong numbers.
