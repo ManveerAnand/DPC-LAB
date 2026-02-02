@@ -20,8 +20,8 @@ def handle_client(conn, addr):
 
 
 def main():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  
     s.bind((HOST, PORT))
     s.listen()
     print(f"Server listening on {HOST}:{PORT}")
