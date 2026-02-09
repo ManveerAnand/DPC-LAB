@@ -3,11 +3,20 @@
 Welcome to my archive of experiments in Distributed and Parallel Computing. This isn't just code; it is a timeline of me figuring out how to make computers talk to each other without screaming errors.
 
 ## Current Status
-**Level:** Lab 2  
+**Level:** Lab 3  
 **State:** Operational  
 **Morale:** High
 
 ## The Log
+
+### Lab 3: Peer-to-Peer Chat (No Central Server)
+**Achievement Unlocked: True Decentralization**
+
+I killed the central server. Every node is now its own boss, acting as both client and server simultaneously. Two terminals can talk to each other directly without asking any middleman for permission.
+
+**The Breakdown:**
+- **P2P Architecture:** Each node runs three components: an external server, a relay server, and a client module. The message flows through the sender's own server before reaching the peer.
+- **No Single Point of Failure:** If one node dies, the other doesn't care about a missing server. It just loses its friend.
 
 ### Lab 2: Concurrency & The Load Balancer
 **Achievement Unlocked: Multitasking**

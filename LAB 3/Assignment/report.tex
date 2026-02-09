@@ -1,0 +1,469 @@
+\documentclass[11pt]{article}
+\usepackage[hmargin=1in,vmargin=1in]{geometry}
+\usepackage[table]{xcolor} 
+\usepackage{amsmath,amssymb,amsfonts,url,sectsty,tcolorbox,framed}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+
+% Header Colors
+\definecolor{lightblue}{rgb}{0.8,0.9,1}
+\definecolor{codebg}{rgb}{0.95,0.95,0.95}
+\definecolor{tableheader}{RGB}{41, 128, 185}
+\definecolor{rowalt}{RGB}{235, 245, 251}
+
+% Code Style Configuration
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    commentstyle=\color{green!50!black},
+    keywordstyle=\color{blue},
+    stringstyle=\color{orange},
+    frame=single,
+    showstringspaces=false,
+    language=Python
+}
+
+% Box Definitions
+\tcbuselibrary{breakable, skins, listings}
+
+% Regular styled box for explanations/functions
+\newtcolorbox{shadedbox}[1][]{%
+    enhanced,
+    breakable,
+    colback=lightblue!20,
+    colframe=blue!75!black,
+    title=#1,
+    fonttitle=\bfseries,
+    arc=2mm,
+    boxrule=0.5pt,
+    before skip=10pt
+}
+
+% Terminal output box definition
+\newtcolorbox{terminalbox}[1]{%
+    enhanced,
+    breakable,
+    colback=black!90,
+    colframe=black,
+    colupper=white,
+    title=#1,
+    fonttitle=\bfseries\ttfamily,
+    arc=1mm,
+    boxrule=0.5pt,
+    before skip=10pt
+}
+
+% Style for the code within the terminal
+\lstdefinestyle{terminalstyle}{
+    basicstyle=\ttfamily\small\color{white},
+    breaklines=true,
+    language=bash,
+    literate={>}{{\textcolor{green}{>}}}1,
+    columns=fullflexible,
+    keepspaces=true,
+    frame=none,
+    backgroundcolor=\color{black!90}
+}
+
+\begin{document}
+
+\noindent
+\rule{\textwidth}{1pt}
+\begin{center}
+{\bf [CS302] Distributed and Parallel Computing}
+\end{center}
+Course Instructor: Dr. Sanjay Saxena \hfill Winter Session 2026-27\\
+Submitted by: Manveer Anand (202351080) \hfill Lab Assignment 3
+\\
+\rule{\textwidth}{1pt}
+
+\tableofcontents
+\newpage 
+
+\section{Introduction}
+This assignment implements a distributed chat application using socket programming in which each node acts as both a client and a server. The system enables two terminals to communicate directly without any centralized server, forming a fully peer-to-peer architecture.
+
+\subsection{Key Requirements}
+\begin{enumerate}
+    \item Each node operates as both a client and a server simultaneously.
+    \item No centralized server exists; communication is purely peer-to-peer.
+    \item Messages are routed through the sender's own server before reaching the peer.
+    \item Both nodes can send and receive messages concurrently.
+\end{enumerate}
+
+\subsection{Communication Flow}
+The message path from Node A to Node B follows this route:
+\begin{enumerate}
+    \item Node A types a message in its client module
+    \item The client sends it to Node A's own relay server
+    \item Node A's relay server forwards it to Node B's external server
+    \item Node B's external server receives and displays the message
+    \item Replies from Node B follow the exact reverse path back to Node A
+\end{enumerate}
+
+\newpage
+
+\section{Architecture Design}
+
+\subsection{Three Components Per Node}
+
+Each chat node runs three distinct components concurrently using threads:
+
+\begin{shadedbox}[Component Architecture]
+\textbf{1. External Server} (Port: \texttt{own\_port}) \\
+Listens for incoming messages from the peer node. When a message arrives from the peer's relay server, it is displayed on the local terminal.
+
+\vspace{6pt}
+\textbf{2. Relay Server} (Port: \texttt{own\_port + 1000}) \\
+Acts as the intermediary. Receives messages from the local client module and forwards them to the peer's external server. This is the ``own server'' referenced in the communication flow.
+
+\vspace{6pt}
+\textbf{3. Client Module} (User Input Thread) \\
+Reads user input from the terminal and sends it to the node's own relay server (not directly to the peer). This ensures the message always passes through the local server before reaching the peer.
+\end{shadedbox}
+
+\subsection{Port Allocation}
+
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\rowcolor{tableheader}
+\textcolor{white}{\textbf{Node}} & \textcolor{white}{\textbf{External Server}} & \textcolor{white}{\textbf{Relay Server}} & \textcolor{white}{\textbf{Peer Target}} \\ \hline
+Node A & 6001 & 7001 & 6002 \\ \hline
+Node B & 6002 & 7002 & 6001 \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection{Message Flow Visualization}
+
+\begin{verbatim}
+  Node A                                         Node B
+  ------                                         ------
+  [User Input]                                      
+      |                                             
+      v                                             
+  [Client Module]                                   
+      |  (sends to own relay)                       
+      v                                             
+  [Relay Server :7001]                              
+      |  (forwards to peer)                         
+      v                                             
+                    ----(network)---->               
+                                                    
+                                         [External Server :6002]
+                                              |
+                                              v
+                                         [Display Message]
+\end{verbatim}
+
+\newpage
+
+\section{Implementation}
+
+\subsection{Node Code (\texttt{node.py})}
+
+\subsubsection{External Server -- Receiving from Peer}
+\begin{lstlisting}
+def external_server(self):
+    """Listens for incoming messages from the peer node."""
+    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    srv.bind((HOST, self.server_port))
+    srv.listen(5)
+    print(f"[{self.name}] External server listening on port {self.server_port}")
+
+    while True:
+        conn, addr = srv.accept()
+        threading.Thread(
+            target=self.handle_peer_message,
+            args=(conn,),
+            daemon=True
+        ).start()
+
+def handle_peer_message(self, conn):
+    """Display messages received from peer node."""
+    try:
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            msg = data.decode("utf-8", errors="ignore")
+            print(f"\n  >> {msg}")
+            print(f"[{self.name}] > ", end="", flush=True)
+    except Exception:
+        pass
+\end{lstlisting}
+
+\newpage
+
+\subsubsection{Relay Server -- Forwarding to Peer}
+\begin{lstlisting}
+def relay_server(self):
+    """Internal server: receives from local client, forwards to peer."""
+    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    srv.bind((HOST, self.relay_port))
+    srv.listen(1)
+    print(f"[{self.name}] Relay server listening on port {self.relay_port}")
+
+    while True:
+        conn, addr = srv.accept()
+        threading.Thread(
+            target=self.forward_to_peer,
+            args=(conn,),
+            daemon=True
+        ).start()
+
+def forward_to_peer(self, conn):
+    """Forward messages from local client to peer's external server."""
+    try:
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            if self.peer_conn:
+                self.peer_conn.sendall(data)
+    except Exception:
+        pass
+\end{lstlisting}
+
+\newpage
+
+\subsubsection{Client Module -- User Input}
+\begin{lstlisting}
+def client_module(self):
+    """Client: reads user input, sends to OWN relay server."""
+    # Connect to own relay server (NOT directly to peer)
+    time.sleep(0.5)
+    client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_sock.connect((HOST, self.relay_port))
+    print(f"[{self.name}] Client connected to own relay server")
+    
+    while True:
+        try:
+            msg = input(f"[{self.name}] > ")
+            if not msg:
+                continue
+            if msg.lower() == "quit":
+                break
+            tagged_msg = f"[{self.name}]: {msg}"
+            client_sock.sendall(tagged_msg.encode("utf-8"))
+        except (KeyboardInterrupt, EOFError):
+            break
+    
+    client_sock.close()
+\end{lstlisting}
+
+\subsubsection{Node Startup Sequence}
+\begin{lstlisting}
+def start(self):
+    """Launch all three components of the node."""
+    # 1. Start external server (receives from peer)
+    threading.Thread(target=self.external_server, daemon=True).start()
+    
+    # 2. Start relay server (receives from local client, forwards)
+    threading.Thread(target=self.relay_server, daemon=True).start()
+    
+    time.sleep(0.5)
+    
+    # 3. Connect to peer's external server
+    self.connect_to_peer()
+    
+    # 4. Run client module on main thread
+    self.client_module()
+\end{lstlisting}
+
+\newpage
+
+\section{Terminal Outputs}
+
+\subsection{Starting Node A}
+
+\begin{terminalbox}{Terminal 1 -- Node A}
+\begin{lstlisting}[style=terminalstyle]
+(base) PS D:\Dev 2.0\DPC\LAB 3\Assignment> python node.py A 6001 6002
+
+==================================================
+  Starting Chat Node: A
+  External Server Port: 6001
+  Relay Server Port:    7001
+  Peer Server Port:     6002
+==================================================
+
+[A] External server listening on port 6001
+[A] Relay server listening on port 7001
+[A] Waiting for peer to come online...
+[A] Waiting for peer to come online...
+[A] Connected to peer's server on port 6002
+[A] Client connected to own relay server on port 7001
+
+==================================================
+  Chat started! Type messages and press Enter.
+  Type 'quit' to exit.
+==================================================
+
+[A] >
+\end{lstlisting}
+\end{terminalbox}
+
+\subsection{Starting Node B}
+
+\begin{terminalbox}{Terminal 2 -- Node B}
+\begin{lstlisting}[style=terminalstyle]
+(base) PS D:\Dev 2.0\DPC\LAB 3\Assignment> python node.py B 6002 6001
+
+==================================================
+  Starting Chat Node: B
+  External Server Port: 6002
+  Relay Server Port:    7002
+  Peer Server Port:     6001
+==================================================
+
+[B] External server listening on port 6002
+[B] Relay server listening on port 7002
+[B] Connected to peer's server on port 6001
+[B] Client connected to own relay server on port 7002
+
+==================================================
+  Chat started! Type messages and press Enter.
+  Type 'quit' to exit.
+==================================================
+
+[B] >
+\end{lstlisting}
+\end{terminalbox}
+
+\newpage
+
+\subsection{Chat Conversation}
+
+\begin{terminalbox}{Terminal 1 -- Node A (Sending and Receiving)}
+\begin{lstlisting}[style=terminalstyle]
+[A] > Hello Node B! How are you?
+  [Relay] Forwarded to peer on port 6002
+[A] >
+  >> [B]: I'm good! This P2P chat works perfectly.
+[A] > Yes! No centralized server needed.
+  [Relay] Forwarded to peer on port 6002
+[A] >
+  >> [B]: Truly distributed communication!
+[A] >
+\end{lstlisting}
+\end{terminalbox}
+
+\begin{terminalbox}{Terminal 2 -- Node B (Sending and Receiving)}
+\begin{lstlisting}[style=terminalstyle]
+[B] >
+  >> [A]: Hello Node B! How are you?
+[B] > I'm good! This P2P chat works perfectly.
+  [Relay] Forwarded to peer on port 6002
+[B] >
+  >> [A]: Yes! No centralized server needed.
+[B] > Truly distributed communication!
+  [Relay] Forwarded to peer on port 6002
+[B] >
+\end{lstlisting}
+\end{terminalbox}
+
+\newpage
+
+\section{Technical Deep Dive}
+
+\subsection{Why Route Through Own Server?}
+
+A natural question arises: why not send messages directly from the client to the peer?
+
+\begin{shadedbox}[The Routing Justification]
+In real distributed systems, the local server acts as a \textbf{gateway} or \textbf{middleware layer}. Routing through the local server enables:
+
+\begin{enumerate}
+    \item \textbf{Message Logging:} The server can log all outgoing messages before forwarding.
+    \item \textbf{Access Control:} The server can validate, filter, or transform messages.
+    \item \textbf{Multi-Peer Routing:} In a system with more than two nodes, the server decides which peer to forward to.
+    \item \textbf{Fault Tolerance:} The server can queue messages if the peer is temporarily unreachable.
+\end{enumerate}
+
+This pattern mirrors real-world architectures like \textbf{XMPP} (used by Jabber/Google Talk) where each user's server handles routing.
+\end{shadedbox}
+
+\subsection{The Relay Port Design}
+
+Each node uses two ports:
+\begin{itemize}
+    \item \textbf{External Port} (\texttt{own\_port}): Public-facing, receives from peer.
+    \item \textbf{Relay Port} (\texttt{own\_port + 1000}): Internal, receives from local client.
+\end{itemize}
+
+This separation ensures clean routing logic. The relay server knows that any message it receives must be forwarded, while the external server knows that any message it receives must be displayed.
+
+\subsection{Threading Model}
+
+The node uses four concurrent threads:
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\rowcolor{tableheader}
+\textcolor{white}{\textbf{Thread}} & \textcolor{white}{\textbf{Component}} & \textcolor{white}{\textbf{Responsibility}} \\ \hline
+Thread 1 & External Server & Accept connections from peer \\ \hline
+Thread 2 & Relay Server & Accept connections from local client \\ \hline
+Thread 3 & Peer Message Handler & Read and display incoming messages \\ \hline
+Main Thread & Client Module & Read user input and send messages \\ \hline
+\end{tabular}
+\end{center}
+
+All background threads are \texttt{daemon=True}, ensuring clean shutdown when the main thread exits.
+
+\subsection{Connection Retry Mechanism}
+
+Since nodes start independently, one node's peer may not be online yet:
+
+\begin{lstlisting}
+def connect_to_peer(self):
+    while True:
+        try:
+            self.peer_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.peer_conn.connect((HOST, self.peer_port))
+            print(f"Connected to peer on port {self.peer_port}")
+            return
+        except ConnectionRefusedError:
+            print("Waiting for peer to come online...")
+            time.sleep(2)  # Retry every 2 seconds
+\end{lstlisting}
+
+This retry loop ensures the node keeps trying until the peer becomes available, making the startup order irrelevant.
+
+\newpage
+
+\section{Comparison: Client-Server vs Peer-to-Peer}
+
+\rowcolors{2}{rowalt}{white}
+\begin{table}[htbp]
+\centering
+\sffamily
+\arrayrulecolor{tableheader}
+\setlength{\arrayrulewidth}{1.2pt}
+\caption{Architectural Comparison}
+\vspace{8pt}
+\begin{tabular}{|>{\bfseries\color{tableheader}}l|p{6cm}|p{6cm}|}
+\hline
+\rowcolor{tableheader}
+\textcolor{white}{Feature} & \textcolor{white}{Client-Server (Lab 2)} & \textcolor{white}{Peer-to-Peer (Lab 3)} \\ \hline
+\textbf{Topology} & Star: All clients connect to a central server & Mesh: Each node connects directly to peers \\ \hline
+\textbf{Single Point of Failure} & Yes: If server dies, all communication stops & No: Each node is self-sufficient \\ \hline
+\textbf{Scalability} & Vertical: Server must handle all load & Horizontal: Load is distributed across nodes \\ \hline
+\textbf{Complexity} & Simple: Clear separation of roles & Higher: Each node manages both roles \\ \hline
+\textbf{Message Path} & Client $\to$ Server $\to$ Client & Client $\to$ Own Server $\to$ Peer Server \\ \hline
+\textbf{Dependency} & Clients depend on server availability & Nodes only depend on peer availability \\ \hline
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+
+This assignment successfully implements a fully decentralized peer-to-peer chat system where each node functions as both a client and a server. The three-component architecture (external server, relay server, client module) cleanly separates concerns while faithfully implementing the required communication flow where messages pass through the sender's own server before reaching the peer. The use of multithreading enables concurrent message sending and receiving, creating a responsive real-time chat experience. The implementation demonstrates that distributed systems can operate without centralized coordination, forming the foundation for understanding more complex peer-to-peer protocols used in modern applications like blockchain networks, BitTorrent, and decentralized messaging platforms.
+
+\end{document}
