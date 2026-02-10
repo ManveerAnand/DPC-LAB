@@ -28,7 +28,8 @@ The beginning. I learned that localhost is home, but 127.0.0.1 is also home.
 - **RPC (Remote Procedure Calls):** I successfully tricked my computer into running a function on a "server" while the "client" sat back and waited for the result.
 
 ## To Be Continued...
-The journey continues. More labs, more complex architectures, and inevitably, more distributed bugs to squash.
+The journey continues. More labs, more understanding architectures, and inevitably, more distributed bugs to squash.
+
 
 ---
 *Repository maintained by ManveerAnand*
