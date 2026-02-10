@@ -205,18 +205,6 @@ python node.py B 6002 6001  # Terminal 2
 
 </div>
 
----
-
-## 📈 Repository Stats
-
-```
-Total Labs Completed: 3
-Total Lines of Code: 2000+
-Bugs Fixed: ∞
-Hours of Debugging: Don't ask
-```
-
----
 
 ## 🔮 What's Next?
 
