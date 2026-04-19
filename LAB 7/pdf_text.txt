@@ -1,0 +1,101 @@
+Lab 7 Distributed Parallel Computing
+1 Program 1: Order Processing using MPI Send and
+Receive
+1.1 Objective
+To demonstrate point-to-point communication using a real-world example of order pro-
+cessing.
+1.2 Description
+Process 0 acts as a manager and sends an order amount to Process 1. Process 1 applies
+a discount and sends the final bill back.
+1.3 Code
+# include < mpi .h >
+# include < iostream >
+using na me sp ac e std ;
+int main ( int argc , char ** argv )
+{
+MPI_Init (& argc , & argv ) ;
+int rank ;
+M P I _ C o m m _ r a n k ( MPI_COMM_WORLD , & rank ) ;
+int o r d e r _ a m o u n t ;
+M P I _ S t a t u s status ;
+if ( rank == 0)
+{
+o r d e r _ a m o u n t = 1000;
+cout << " Manager : ␣ Sending ␣ order ␣ amount ␣ = ␣ " <<
+o r d e r _ a m o u n t << endl ;
+MPI_Send (& order_amount , 1 , MPI_INT , 1 , 0 , M P I _ C O M M _ W O R L D )
+;
+MPI_Recv (& order_amount , 1 , MPI_INT , 1 , 1 , MPI_COMM_WORLD ,
+& status ) ;
+1
+cout << " Manager : ␣ Received ␣ final ␣ bill ␣ after ␣ discount ␣ = ␣ "
+<< o r d e r _ a m o u n t << endl ;
+}
+else if ( rank == 1)
+{
+MPI_Recv (& order_amount , 1 , MPI_INT , 0 , 0 , MPI_COMM_WORLD ,
+& status ) ;
+cout << " Worker : ␣ Received ␣ order ␣ amount ␣ = ␣ " <<
+o r d e r _ a m o u n t << endl ;
+int discount = o r d e r _ a m o u n t * 10 / 100;
+int f i n a l _ b i l l = o r d e r _ a m o u n t - discount ;
+cout << " Worker : ␣ Final ␣ bill ␣ after ␣ 10\% ␣ discount ␣ = ␣ " <<
+f i n a l _ b i l l << endl ;
+MPI_Send (& final_bill , 1 , MPI_INT , 0 , 1 , M P I _ C O M M _ W O R L D ) ;
+}
+M P I _ F i n a l i z e () ;
+return 0;
+}
+1.4 Output
+Manager: Sending order amount = 1000
+Worker: Received order amount = 1000
+Worker: Final bill after 10% discount = 900
+Manager: Received final bill after discount = 900
+1.5 Explanation
+This program demonstrates point-to-point communication. The manager sends data to
+the worker, the worker processes it, and sends the result back.
+2
+2 Program 2: Bonus Distribution using MPI Broad-
+cast
+2.1 Objective
+To demonstrate collective communication using MPI Bcast with a real-world example.
+2.2 Description
+Process 0 acts as HR and broadcasts a bonus amount to all employees. Each process
+calculates its final salary.
+2.3 Code
+# include < mpi .h >
+# include < iostream >
+using na me sp ac e std ;
+int main ( int argc , char ** argv )
+{
+MPI_Init (& argc , & argv ) ;
+int rank , size ;
+M P I _ C o m m _ r a n k ( MPI_COMM_WORLD , & rank ) ;
+M P I _ C o m m _ s i z e ( MPI_COMM_WORLD , & size ) ;
+int bonus ;
+int b a s e _ s a l a r y = 20000;
+if ( rank == 0)
+{
+bonus = 5000;
+cout << " HR ␣ Manager : ␣ A n n o u n c i n g ␣ bonus ␣ = ␣ " << bonus <<
+endl ;
+}
+MP I_ Bc as t (& bonus , 1 , MPI_INT , 0 , M P I _ C O M M _ W O R L D ) ;
+int f i n a l _ s a l a r y = b a s e _ s a l a r y + bonus + ( rank * 1000) ;
+cout << " Employee ␣ ( Process ␣ " << rank << " ) ␣ "
+<< " received ␣ bonus ␣ = ␣ " << bonus
+<< " ␣ and ␣ final ␣ salary ␣ = ␣ " << f i n a l _ s a l a r y << endl ;
+M P I _ F i n a l i z e () ;
+return 0;
+}
+3
+2.4 Output
+HR Manager: Announcing bonus = 5000
+Employee (Process 0) received bonus = 5000 and final salary = 25000
+Employee (Process 1) received bonus = 5000 and final salary = 26000
+Employee (Process 2) received bonus = 5000 and final salary = 27000
+Employee (Process 3) received bonus = 5000 and final salary = 28000
+2.5 Explanation
+This program demonstrates broadcast communication. One process sends the same data
+to all processes, and each performs its own computation.
+4

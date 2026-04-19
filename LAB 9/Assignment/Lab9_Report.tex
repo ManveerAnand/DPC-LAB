@@ -1,0 +1,404 @@
+\documentclass[11pt]{article}
+\usepackage[hmargin=1in,vmargin=1in]{geometry}
+\usepackage[table]{xcolor} 
+\usepackage{amsmath,amssymb,amsfonts,url,sectsty,tcolorbox,framed}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, posi   tioning, shapes.geometric, fit, backgrounds, calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{fancyhdr}
+\usepackage{fontawesome5}
+\usepackage{enumitem}
+
+% ──────────────────────────────────────────────────────
+% COLOR PALETTE (Safe for dark backgrounds)
+% ──────────────────────────────────────────────────────
+\definecolor{lightblue}{rgb}{0.8,0.9,1}
+\definecolor{codebg}{RGB}{20, 20, 20} % Very dark grey/black for terminal background
+\definecolor{codeframe}{RGB}{100, 100, 100}
+\definecolor{tableheader}{RGB}{41, 128, 185}
+\definecolor{rowalt}{RGB}{235, 245, 251}
+
+% Terminal Colors (Bright variants to pop against dark background)
+\definecolor{termcyan}{RGB}{86, 182, 194}
+\definecolor{termgreen}{RGB}{73, 203, 104}
+\definecolor{termred}{RGB}{235, 87, 87}
+\definecolor{termyellow}{RGB}{229, 192, 123}
+\definecolor{termblue}{RGB}{97, 175, 239}
+\definecolor{termmagenta}{RGB}{198, 120, 221}
+\definecolor{termwhite}{RGB}{220, 220, 220}
+
+\definecolor{accentblue}{RGB}{52, 152, 219}
+\definecolor{accentgreen}{RGB}{39, 174, 96}
+\definecolor{accentorange}{RGB}{230, 126, 34}
+\definecolor{accentpurple}{RGB}{142, 68, 173}
+\definecolor{sectioncolor}{RGB}{41, 128, 185}
+
+% C++ / Python syntax colors
+\definecolor{codekw}{RGB}{86, 156, 214}
+\definecolor{codecomment}{RGB}{106, 153, 85}
+\definecolor{codestring}{RGB}{206, 145, 120}
+\definecolor{codenumber}{RGB}{181, 206, 168}
+
+% ──────────────────────────────────────────────────────
+% SECTION STYLING
+% ──────────────────────────────────────────────────────
+\sectionfont{\color{sectioncolor}}
+\subsectionfont{\color{sectioncolor!80!black}}
+\subsubsectionfont{\color{sectioncolor!60!black}}
+
+% ──────────────────────────────────────────────────────
+% HYPERLINK STYLING
+% ──────────────────────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=sectioncolor,
+    urlcolor=accentblue,
+    citecolor=accentgreen,
+    pdfborder={0 0 0}
+}
+
+% ──────────────────────────────────────────────────────
+% HEADER / FOOTER
+% ──────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}\textsc{Lab 9: Distributed Bank Backend}}
+\fancyhead[R]{\small\color{gray}\textsc{CS-302 -- DPC}}
+\fancyfoot[C]{\small\color{gray}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\color{gray}\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+% ──────────────────────────────────────────────────────
+% BOX DEFINITIONS & LISTING STYLES
+% ──────────────────────────────────────────────────────
+\tcbuselibrary{breakable, skins, listings}
+
+% Python Code Style
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\color{white}\ttfamily\small,
+    identifierstyle=\color{white},
+    breaklines=true,
+    breakatwhitespace=false,
+    commentstyle=\color{codecomment}\itshape,
+    keywordstyle=\color{codekw}\bfseries,
+    stringstyle=\color{codestring},
+    numberstyle=\tiny\color{gray},
+    numbers=left,
+    numbersep=8pt,
+    stepnumber=1,
+    frame=none,
+    showstringspaces=false,
+    language=Python,
+    tabsize=4,
+    columns=fullflexible,
+    keepspaces=true,
+    xleftmargin=10pt,
+    literate=
+        {0}{{\textcolor{codenumber}{0}}}1
+        {1}{{\textcolor{codenumber}{1}}}1
+        {2}{{\textcolor{codenumber}{2}}}1
+        {3}{{\textcolor{codenumber}{3}}}1
+        {4}{{\textcolor{codenumber}{4}}}1
+        {5}{{\textcolor{codenumber}{5}}}1
+        {6}{{\textcolor{codenumber}{6}}}1
+        {7}{{\textcolor{codenumber}{7}}}1
+        {8}{{\textcolor{codenumber}{8}}}1
+        {9}{{\textcolor{codenumber}{9}}}1
+}
+
+% Python Code Box
+\newtcolorbox{codebox}[1][]{%
+    enhanced, breakable, colback=codebg, colframe=codebg!60!black, colupper=white,
+    title={\faCode\ \ #1}, fonttitle=\bfseries\sffamily\small\color{white},
+    coltitle=white, arc=4pt, boxrule=0.8pt, top=2pt, bottom=2pt, left=0pt, right=4pt,
+    before skip=10pt, after skip=10pt, shadow={1mm}{-1mm}{0mm}{black!30},
+    attach boxed title to top left={xshift=10pt, yshift=-\tcboxedtitleheight/2},
+    boxed title style={colback=accentblue, arc=3pt, boxrule=0pt, left=6pt, right=6pt}
+}
+
+% Explanation box
+\newtcolorbox{shadedbox}[1][]{%
+    enhanced, breakable, colback=lightblue!15, colframe=accentblue,
+    title={\faLightbulb[regular]\ \ #1}, fonttitle=\bfseries\sffamily,
+    coltitle=white, arc=4pt, boxrule=0.8pt, before skip=10pt, after skip=10pt,
+    shadow={1mm}{-1mm}{0mm}{accentblue!20},
+    attach boxed title to top left={xshift=10pt, yshift=-\tcboxedtitleheight/2},
+    boxed title style={colback=accentblue, arc=3pt, boxrule=0pt, left=6pt, right=6pt}
+}
+
+% Terminal output box
+\newtcolorbox{terminalbox}[1]{%
+    enhanced, breakable, colback=codebg, colframe=codeframe, colupper=termwhite,
+    title={\faTerminal\ \ #1}, fonttitle=\bfseries\ttfamily\small\color{white},
+    coltitle=white, arc=4pt, boxrule=0.8pt, before skip=10pt, after skip=10pt,
+    shadow={1mm}{-1mm}{0mm}{black!30},
+    attach boxed title to top left={xshift=10pt, yshift=-\tcboxedtitleheight/2},
+    boxed title style={colback=accentgreen!80!black, arc=3pt, boxrule=0pt, left=6pt, right=6pt}
+}
+
+% Note on the escape characters mapped here: we match the terminal string outputs exactly to LaTeX text macros
+\lstdefinestyle{terminalstyle}{
+    basicstyle=\color{white}\ttfamily\footnotesize,
+    identifierstyle=\color{white},
+    breaklines=true, 
+    language=bash, 
+    numbers=none,
+    columns=fullflexible, 
+    keepspaces=true, 
+    frame=none, 
+    backgroundcolor=\color{codebg}, 
+    xleftmargin=8pt,
+    moredelim=**[is][\color{termmagenta}\bfseries]{@M@}{@M@},
+    moredelim=**[is][\color{termcyan}]{@C@}{@C@},
+    moredelim=**[is][\color{termgreen}\bfseries]{@G@}{@G@},
+    moredelim=**[is][\color{termred}\bfseries]{@R@}{@R@},
+    moredelim=**[is][\color{termyellow}\bfseries]{@Y@}{@Y@},
+    moredelim=**[is][\color{termblue}\bfseries]{@B@}{@B@},
+    moredelim=**[is][\bfseries]{@W@}{@W@}
+}
+
+\begin{document}
+
+% ══════════════════════════════════════════════════════
+% TITLE PAGE
+% ══════════════════════════════════════════════════════
+\thispagestyle{empty}
+\begin{center}
+\vspace*{1cm}
+
+{\color{sectioncolor}\rule{\textwidth}{2pt}}
+\vspace{0.3cm}
+
+{\Huge\bfseries\sffamily\color{sectioncolor} Distributed Bank Backend}
+
+\vspace{0.15cm}
+{\Large\sffamily\color{gray} Joint Fixed Deposit Account Processing}
+
+\vspace{0.3cm}
+{\color{sectioncolor}\rule{\textwidth}{2pt}}
+
+\vspace{1.2cm}
+
+{\large\sffamily\color{sectioncolor} [CS-302] Distributed and Parallel Computing}
+
+\vspace{1.5cm}
+
+\begin{tikzpicture}
+\node[draw=sectioncolor, fill=sectioncolor!5, rounded corners=8pt, inner sep=15pt, minimum width=10cm] {
+    \begin{tabular}{r @{\hspace{12pt}} l}
+    \textbf{\color{sectioncolor}Course Instructor} & Dr. Sanjay Saxena \\
+    \textbf{\color{sectioncolor}Session} & Winter 2026-27 \\
+    \textbf{\color{sectioncolor}Submitted by} & Manveer Anand \\
+    \textbf{\color{sectioncolor}Roll Number} & 202351080 \\
+    \textbf{\color{sectioncolor}Assignment} & Lab 9 \\
+    \end{tabular}
+};
+\end{tikzpicture}
+
+\vspace{1.5cm}
+
+{\color{gray}\small Concepts: \texttt{Message Passing Interface (MPI)} $\cdot$ \texttt{SPMD Extensibility} $\cdot$ \texttt{Inter-Process Communication}}
+
+\vfill
+{\color{gray}\small\today}
+\end{center}
+\newpage
+
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════
+% INTRODUCTION
+% ══════════════════════════════════════════════════════
+\section{Introduction}
+
+In parallel and distributed systems, computational loads must often be divided symmetrically among disjoint processes that later require strict coordination. This lab investigates the Message Passing Interface (MPI) by simulating a distributed banking server administering a Joint Fixed Deposit account.
+
+\subsection{Objectives}
+\begin{enumerate}
+    \item \textbf{Parallel Task Operations:} Simulate two completely independent nodes applying 730 days (2 years) worth of compounded daily interest concurrently.
+    \item \textbf{Time \& Random Fluctuation Synchronization:} Emulate volatile market conditions utilizing seed-dependent values. Apply an explicit computational audit delay simulating regulatory cryptographic requirements.
+    \item \textbf{Inter-Process Communication (IPC):} Implement explicit message passing (\texttt{comm.send} / \texttt{comm.recv}) ensuring both Node A and Node B receive each other's independently verified maturity balances.
+    \item \textbf{Consensus Guarantee:} Assert a robust gathering logic that requires exact numerical consensus between the scattered processes.
+\end{enumerate}
+
+\subsection{System Configuration}
+
+\begin{shadedbox}[Environment Parameters]
+The experiment scales across \textbf{two independent MPI bounds}:
+\begin{itemize}[leftmargin=*]
+    \item Node A Base Investment: \$6,555.00 (Phone Iteration: 6555) 
+    \item Node B Base Investment: \$5,191.00 (Phone Iteration: 5191) 
+    \item Initial Base Growth: 7.0\% Annual + Seeded Variable Disturbance $0.1\% \to 0.9\%$
+    \item Cryptographic Delay: 2ms injected computationally.
+\end{itemize}
+\end{shadedbox}
+
+\section{Source Code}
+
+The underlying implementation relies on \texttt{mpi4py} for parallel context distribution mapping Node A (Rank 0) and Node B (Rank 1). Notice carefully the \texttt{comm.send}, \texttt{comm.recv} for messaging, and \texttt{comm.gather} for verifying absolute numerical agreement.
+
+\begin{codebox}[final\_mpi.py]
+\begin{lstlisting}
+from mpi4py import MPI
+import random
+import time
+
+P1          = 6555      # Last 4 digits of Client 1 
+P2          = 5191      # Last 4 digits of Client 2 
+N_YEARS     = 2         # Timeframe in years
+AUDIT_DELAY = 0.002     # Regulatory audit delay per day in seconds
+BASE_RATE   = 0.07      # 7.0% annual base interest rate
+
+def compute_maturity(principal, seed, n_years, node_label):
+    random.seed(seed)
+    amount     = float(principal)
+    total_days = n_years * 365
+    for day in range(1, total_days + 1):
+        bonus      = random.uniform(0.001, 0.009)
+        rate_daily = (BASE_RATE + bonus) / 365.0
+        amount *= (1 + rate_daily)
+        time.sleep(AUDIT_DELAY)
+    return amount
+
+def main():
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+    if size != 2: return
+    
+    if rank == 0:
+        node_label, principal, seed = "Node A", float(P1), P1
+    else:
+        node_label, principal, seed = "Node B", float(P2), P2
+
+    # --- Phase 1 & 2: Parallel Computation ---
+    maturity = compute_maturity(principal, seed, N_YEARS, node_label)
+    comm.Barrier()
+
+    # --- Phase 3: Message Passing (IPC) ---
+    if rank == 0:
+        comm.send(maturity, dest=1, tag=10)
+        partner_maturity = comm.recv(source=1, tag=20)
+    else:
+        partner_maturity = comm.recv(source=0, tag=10)
+        comm.send(maturity, dest=0, tag=20)
+    comm.Barrier()
+
+    # --- Phase 4: Consensus Check ---
+    total = maturity + partner_maturity
+    all_totals = comm.gather(total, root=0)
+    
+    if rank == 0:
+        consensus_ok = abs(all_totals[0] - all_totals[1]) < 1e-9
+        if consensus_ok:
+            print("CONSENSUS ACHIEVED")
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+\end{codebox}
+
+% ══════════════════════════════════════════════════════
+% EXECUTION AND RESULTS
+% ══════════════════════════════════════════════════════
+\section{Terminal Output \& Visualization}
+
+Execution is verified using \texttt{mpiexec} mapping processes via the python execution interface. The execution log illustrates perfect parallelism, accurate IPC tracking avoiding deadlocks via reversed tags, and an achieved absolute consensus.
+
+\begin{terminalbox}{Terminal Execution Output}
+\begin{lstlisting}[style=terminalstyle]
+(base) PS D:\Dev 2.0\DPC\LAB 9\Assignment> mpiexec -n 2 py .\final_mpi.py
+
+@M@=================================================================@M@
+@M@        CS-302 | Distributed Bank Backend                        @M@
+@M@        Joint Fixed Deposit Account Processing                   @M@
+@M@=================================================================@M@
+  Client 1 (Node A)  |  Principal: $6,555.00  |  Seed: 6555
+  Client 2 (Node B)  |  Principal: $5,191.00  |  Seed: 5191
+  Timeframe          |  2 year(s) = 730 days
+  Base Annual Rate   |  7.0% + random daily bonus (0.1%-0.9%)
+  Audit Delay/Day    |  2 ms  (regulatory cryptographic check)
+@M@=================================================================@M@
+@C@[Node B] Starting day-by-day compound interest simulation...@C@
+
+  @Y@>> PHASE 1 & 2: Both nodes processing transactions in parallel...@Y@
+
+@C@[Node A] Starting day-by-day compound interest simulation...@C@
+  |  Starting: Principal = $5,191.00  |  Seed = 5191  |  Days = 730
+  |  Starting: Principal = $6,555.00  |  Seed = 6555  |  Days = 730
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+  @B@[Node B]@B@  Day   30/730  |  Rate: 7.264%  |  Balance: $  5,222.9200
+  @G@[Node A]@G@  Day   30/730  |  Rate: 7.380%  |  Balance: $  6,595.3361
+  @B@[Node B]@B@  Day   60/730  |  Rate: 7.484%  |  Balance: $  5,255.1498
+  @G@[Node A]@G@  Day   60/730  |  Rate: 7.313%  |  Balance: $  6,635.6394
+  @B@[Node B]@B@  Day   90/730  |  Rate: 7.521%  |  Balance: $  5,287.6909
+  @G@[Node A]@G@  Day   90/730  |  Rate: 7.265%  |  Balance: $  6,676.4894
+  @B@[Node B]@B@  Day  120/730  |  Rate: 7.855%  |  Balance: $  5,320.3507
+  @G@[Node A]@G@  Day  120/730  |  Rate: 7.518%  |  Balance: $  6,717.5317
+  @G@[Node A]@G@  Day  150/730  |  Rate: 7.115%  |  Balance: $  6,758.7992
+  @B@[Node B]@B@  Day  150/730  |  Rate: 7.510%  |  Balance: $  5,353.5691
+  @G@[Node A]@G@  Day  180/730  |  Rate: 7.388%  |  Balance: $  6,800.8663
+  @B@[Node B]@B@  Day  180/730  |  Rate: 7.757%  |  Balance: $  5,386.6381
+...
+  @G@[Node A]@G@  Day  730/730  |  Rate: 7.308%  |  Balance: $  7,612.6059
+  @B@[Node B]@B@  Day  730/730  |  Rate: 7.618%  |  Balance: $  6,032.0264
+-----------------------------------------------------------------
+@W@[Node A] DONE  |  Final Maturity = $7,612.605866  |  Time taken = 1.86s@W@
+@W@[Node B] DONE  |  Final Maturity = $6,032.026422  |  Time taken = 1.86s@W@
+
+  @Y@>> PHASE 3: Inter-Process Communication (IPC) - Message Passing...@Y@
+  
+  [Node B]  Received MatA = $  7,612.605866  <--  from Node A
+  [Node B]  Sent    MatB = $  6,032.026422  -->  to   Node A
+  [Node A]  Sent    MatA = $  7,612.605866  -->  to   Node B
+  [Node A]  Received MatB = $  6,032.026422  <--  from Node B
+
+  @Y@>> PHASE 4: Consensus Check - Verifying both nodes agree on total...@Y@
+
+  [Node A]  My total = MatA + MatB = $7,612.605866 + $6,032.026422 = @W@$13,644.632288@W@
+  [Node B]  My total = MatA + MatB = $7,612.605866 + $6,032.026422 = @W@$13,644.632288@W@
+
+@M@=================================================================@M@
+@M@        JOINT FIXED DEPOSIT - FINAL SETTLEMENT REPORT            @M@
+@M@=================================================================@M@
+  Client 1 Principal (P1)       : $    6,555.00
+  Client 2 Principal (P2)       : $    5,191.00
+  Combined Principal            : $   11,746.00
+-----------------------------------------------------------------
+  Node A Maturity Value (MatA)  : $  7,612.605866
+  Node B Maturity Value (MatB)  : $  6,032.026422
+-----------------------------------------------------------------
+  Total Maturity (MatA + MatB)  : $ 13,644.632288
+  Total Interest Earned         : $  1,898.632288
+  Effective Return              :       16.1641%
+-----------------------------------------------------------------
+  Node A computed total         : $ 13,644.632288
+  Node B computed total         : $ 13,644.632288
+@M@=================================================================@M@
+  Node A Final Total : @W@$ 13,644.632288@W@
+  Node B Final Total : @W@$ 13,644.632288@W@
+-----------------------------------------------------------------
+  @G@CONSENSUS  : [ACHIEVED] Both nodes agree on the final total.@G@
+  @G@TRANSACTION: [SUCCESS]  Joint FD account has been created.@G@
+@M@=================================================================@M@
+\end{lstlisting}
+\end{terminalbox}
+
+% ══════════════════════════════════════════════════════
+% CONCLUSION
+% ══════════════════════════════════════════════════════
+\section{Conclusion}
+This lab successfully demonstrated the application of the Message Passing Interface (MPI) to simulate a distributed financial backend. By strictly segregating the day-by-day compound interest computations into isolated processes (Node A and Node B) and introducing synthetic audit delays, the simulation appropriately modeled real-world distributed processing architectures. The use of MPI IPC protocols (\texttt{comm.send}, \texttt{comm.recv}, and \texttt{comm.gather}) proved effective in mitigating deadlock, securely exchanging sensitive floating-point values, and rigorously affirming consensus across process boundaries. Through this exercise, we observed the efficacy and necessity of robust message passing and consensus mechanisms in scaling fault-tolerant, parallelized applications.
+
+\end{document}
