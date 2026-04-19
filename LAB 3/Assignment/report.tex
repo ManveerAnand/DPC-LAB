@@ -141,23 +141,42 @@ Node B & 6002 & 7002 & 6001 \\ \hline
 \subsection{Message Flow Visualization}
 
 \begin{verbatim}
-  Node A                                         Node B
-  ------                                         ------
-  [User Input]                                      
-      |                                             
-      v                                             
-  [Client Module]                                   
-      |  (sends to own relay)                       
-      v                                             
-  [Relay Server :7001]                              
-      |  (forwards to peer)                         
-      v                                             
-                    ----(network)---->               
-                                                    
-                                         [External Server :6002]
-                                              |
-                                              v
-                                         [Display Message]
+        Node A                                            Node B
+        ======                                            ======
+
+    [User Input]                                      [User Input]
+         |                                                 |
+         v                                                 v
+  [Client Module]                                   [Client Module]
+         |                                                 |
+         | (sends to own relay)                           | (sends to own relay)
+         v                                                 v
+  [Relay Server]                                    [Relay Server]
+    Port: 7001                                        Port: 7002
+         |                                                 |
+         | (forwards to peer)                             | (forwards to peer)
+         v                                                 v
+         |                                                 |
+         +-----------------(network)---------------------->|
+         |                                                 |
+         |<-----------------(network)-----------------------+
+         |                                                 |
+         v                                                 v
+  [External Server]                                 [External Server]
+    Port: 6001                                        Port: 6002
+         |                                                 |
+         v                                                 v
+  [Display Message]                                 [Display Message]
+
+
+  Message Path Example (A -> B):
+  --------------------------------
+  1. User types in Node A terminal
+  2. Client Module sends to localhost:7001 (own Relay Server)
+  3. Relay Server forwards to Node B's External Server (port 6002)
+  4. Node B's External Server receives and displays message
+
+  Reply Path (B -> A): Exact reverse through Node B's relay to Node A's external server
 \end{verbatim}
 
 \newpage

@@ -56,4 +56,3 @@ while True:
     thread.start()
     
     # Print how many active people are talking to the server
-    print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1}")
